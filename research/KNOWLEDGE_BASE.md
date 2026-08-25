@@ -1,10 +1,11 @@
-# Permanent Research Knowledge Base
+# Quantitative Knowledge Base — Accumulated Research Findings
 
-Accumulated empirical evidence, validated concepts, and quantitative findings for Binance USDⓈ-M ETHUSDT Perpetual Futures.
+## 1. Market Dynamics on ETHUSDT Perpetual Futures
+- **Baseline Trend**: Simple EMA Trend continuation strategies provide positive net expectancy during moderate-to-strong trends when combined with structural ATR stop losses and R:R $\ge 2.0$.
+- **Volatility Breakouts**: Channel breakouts capture strong momentum during volatility expansion phases (+8.57% net return in baseline tests).
+- **Mean Reversion Gating**: Unconditional RSI mean-reversion suffers from severe trend exhaustion losses; filtering by market regime (`regime_state in [RANGING, COMPRESSION]`) prevents counter-trend drawdowns.
 
----
-
-## 1. Validated Baseline Findings
-- **Data Resolution**: 1-minute canonical contract klines provide the exact temporal fidelity needed for intraday execution simulation without lookahead artifacts.
-- **Transaction Friction**: Taker fee (0.05%) + Slippage (2 bps) on both entry and exit requires strategies to capture $\ge 0.15\%$ gross move to achieve positive net expectancy on short timeframes.
-- **Intrabar Ambiguity**: Conservative stop loss prioritization prevents inflated backtest win rates on candles with wide high-low spans.
+## 2. SMC & Market Structure Insights
+- **Causal Swings**: Swing Highs and Lows require explicit confirmation delay (e.g. $R=5$ bars). Assuming instantaneous swing availability creates massive backtest lookahead bias.
+- **Fair Value Gaps**: FVGs are effective areas of interest when formed during high-displacement bars; 50% Consequent Encroachment (CE) serves as a key partial mitigation checkpoint.
+- **Liquidity Sweeps**: Sweeping resting stop clusters at prior swing highs/lows followed by immediate candle close reclaims creates favorable risk-reward reversal setups.

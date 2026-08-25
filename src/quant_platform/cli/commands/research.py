@@ -84,3 +84,59 @@ def show_experiment(experiment_id: str):
 
     if exp.conclusion:
         console.print(f"\n[bold]Conclusion:[/bold] {exp.conclusion}\n")
+
+
+@app.command("rejected")
+def list_rejected():
+    """List all permanently preserved rejected hypotheses and negative results."""
+    ledger = ResearchLedger()
+    rejected = ledger.list_rejected_hypotheses()
+
+    if not rejected:
+        console.print("[green]No rejected experiments in ledger.[/green]")
+        return
+
+    table = Table(title="Permanently Retained Rejected Hypotheses", header_style="bold red")
+    table.add_column("Experiment ID", style="bold white")
+    table.add_column("Strategy", style="cyan")
+    table.add_column("Hypothesis")
+    table.add_column("Net Ret %", justify="right")
+
+    for e in rejected:
+        table.add_row(
+            e["experiment_id"],
+            e.get("strategy_id", "unknown"),
+            e.get("hypothesis", "")[:60] + "...",
+            f"{e.get('net_return', 0.0):+.2f}%",
+        )
+
+    console.print(table)
+
+
+@app.command("similar")
+def find_similar(strategy_id: str):
+    """Find all related past experiments for a given strategy ID."""
+    ledger = ResearchLedger()
+    similar = ledger.find_similar_experiments(strategy_id=strategy_id)
+
+    if not similar:
+        console.print(f"[yellow]No previous experiments found for '{strategy_id}'.[/yellow]")
+        return
+
+    table = Table(title=f"Related Experiments for '{strategy_id}'", header_style="bold cyan")
+    table.add_column("Experiment ID", style="bold white")
+    table.add_column("Status")
+    table.add_column("Net Ret %", justify="right")
+    table.add_column("Win Rate", justify="right")
+    table.add_column("Trades", justify="right")
+
+    for e in similar:
+        table.add_row(
+            e["experiment_id"],
+            e.get("status", ""),
+            f"{e.get('net_return', 0.0):+.2f}%",
+            f"{e.get('win_rate', 0.0):.1f}%",
+            str(e.get("trade_count", 0)),
+        )
+
+    console.print(table)

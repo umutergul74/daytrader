@@ -1,5 +1,9 @@
-"""Market structure package."""
+"""Market structure features package."""
 
-from quant_platform.features.structure.swings import CausalSwingEngine, SwingPoint
+from quant_platform.features.structure.swings import CausalSwingEngine
+from quant_platform.features.structure.market_structure import MarketStructureEngine
 
-__all__ = ["CausalSwingEngine", "SwingPoint"]
+__all__ = [
+    "CausalSwingEngine",
+    "MarketStructureEngine",
+]

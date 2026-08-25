@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 
 from quant_platform.config.settings import settings
 from quant_platform.domain.experiment import (
@@ -99,11 +99,36 @@ class ResearchLedger:
             return []
 
     def get_experiment(self, experiment_id: str) -> Optional[ExperimentRecord]:
-        """Fetch full experiment record by ID."""
+        """Load full experiment record by ID."""
         record_file = self.records_dir / f"{experiment_id}.json"
         if not record_file.exists():
             return None
-        return ExperimentRecord.model_validate_json(record_file.read_text(encoding="utf-8"))
+        try:
+            data = json.loads(record_file.read_text(encoding="utf-8"))
+            return ExperimentRecord.model_validate(data)
+        except Exception as e:
+            logger.error(f"Failed to load experiment {experiment_id}: {e}")
+            return None
+
+    def find_similar_experiments(
+        self,
+        strategy_id: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Find related past experiments by strategy ID or status."""
+        all_exps = self.list_experiments()
+        results = []
+        for exp in all_exps:
+            if strategy_id and exp.get("strategy_id") != strategy_id:
+                continue
+            if status and exp.get("status") != status:
+                continue
+            results.append(exp)
+        return results
+
+    def list_rejected_hypotheses(self) -> List[Dict[str, Any]]:
+        """List all experiments permanently retained with REJECTED status."""
+        return self.find_similar_experiments(status="rejected")
 
     def find_duplicate(
         self,
@@ -114,25 +139,64 @@ class ResearchLedger:
         start_date: str,
         end_date: str,
         cost_model: Dict[str, Any],
-        seed: int,
+        seed: int = 42,
     ) -> Optional[ExperimentRecord]:
-        """Check if an identical experiment configuration has already been executed."""
+        """Check if an identical experiment has already been recorded and return record."""
+        is_dup, exp_id = self.is_duplicate_experiment(
+            strategy_id,
+            strategy_version,
+            parameters,
+            dataset_fingerprint,
+            start_date,
+            end_date,
+            cost_model,
+            seed,
+        )
+        if is_dup and exp_id:
+            return self.get_experiment(exp_id)
+        return None
+
+    def is_duplicate_experiment(
+        self,
+        strategy_id: str,
+        strategy_version: str,
+        parameters: Dict[str, Any],
+        dataset_fingerprint: str,
+        start_date: str,
+        end_date: str,
+        cost_model: Dict[str, Any],
+        seed: int = 42,
+    ) -> Tuple[bool, Optional[str]]:
+        """Check if an identical experiment has already been recorded."""
         param_hash = self._compute_parameter_hash(parameters)
-        target_id = self._compute_experiment_identity(
-            strategy_id, strategy_version, param_hash, dataset_fingerprint,
-            start_date, end_date, cost_model, seed
+        target_identity = self._compute_experiment_identity(
+            strategy_id,
+            strategy_version,
+            param_hash,
+            dataset_fingerprint,
+            start_date,
+            end_date,
+            cost_model,
+            seed,
         )
 
-        for summary in self.list_experiments():
-            exp = self.get_experiment(summary["experiment_id"])
-            if exp is None:
+        for rec_path in self.records_dir.glob("EXP-*.json"):
+            try:
+                rec_data = json.loads(rec_path.read_text(encoding="utf-8"))
+                rec_id = rec_data.get("experiment_id")
+                rec_ident = self._compute_experiment_identity(
+                    rec_data.get("strategy_id", ""),
+                    rec_data.get("strategy_version", ""),
+                    rec_data.get("parameter_hash", ""),
+                    rec_data.get("dataset_fingerprint", ""),
+                    rec_data.get("date_range_start", ""),
+                    rec_data.get("date_range_end", ""),
+                    rec_data.get("cost_model", {}),
+                    rec_data.get("seed", 42),
+                )
+                if rec_ident == target_identity:
+                    return True, rec_id
+            except Exception:
                 continue
-            curr_id = self._compute_experiment_identity(
-                exp.strategy_id, exp.strategy_version, exp.parameter_hash,
-                exp.dataset_fingerprint, exp.date_range_start, exp.date_range_end,
-                exp.cost_model, exp.random_seed
-            )
-            if curr_id == target_id:
-                return exp
 
-        return None
+        return False, None

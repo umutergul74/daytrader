@@ -1,6 +1,7 @@
 """Momentum Indicators in Polars."""
 
 from typing import Optional, Tuple
+import numpy as np
 import polars as pl
 
 
@@ -8,12 +9,10 @@ def compute_rsi(df: pl.DataFrame, period: int = 14, column: str = "close", outpu
     """Compute Relative Strength Index (Wilder's RSI)."""
     out = output_col or f"rsi_{period}"
     
-    # Calculate price change
     diff = pl.col(column).diff()
     gain = pl.when(diff > 0).then(diff).otherwise(0.0)
     loss = pl.when(diff < 0).then(-diff).otherwise(0.0)
 
-    # Wilder's smoothing corresponds to ewm with alpha = 1 / period (span = 2*period - 1)
     df_temp = df.with_columns([
         gain.alias("_gain"),
         loss.alias("_loss"),
@@ -84,14 +83,119 @@ def compute_stochastic(
 
     df_temp = df.with_columns(raw_k.alias("_raw_k"))
     
-    # Smooth %K
     df_temp = df_temp.with_columns(
         pl.col("_raw_k").rolling_mean(window_size=s_period).alias("stoch_k")
     )
     
-    # %D is SMA of %K
     df_res = df_temp.with_columns(
         pl.col("stoch_k").rolling_mean(window_size=d_period).alias("stoch_d")
     ).drop(["_raw_k"])
+
+    return df_res
+
+
+def compute_stoch_rsi(
+    df: pl.DataFrame,
+    rsi_period: int = 14,
+    stoch_period: int = 14,
+    k_period: int = 3,
+    d_period: int = 3,
+) -> pl.DataFrame:
+    """Compute Stochastic RSI (%K and %D)."""
+    rsi_col = f"_rsi_{rsi_period}"
+    df_calc = compute_rsi(df, period=rsi_period, output_col=rsi_col)
+
+    rsi_min = pl.col(rsi_col).rolling_min(window_size=stoch_period)
+    rsi_max = pl.col(rsi_col).rolling_max(window_size=stoch_period)
+
+    raw_stoch_rsi = (pl.col(rsi_col) - rsi_min) / (rsi_max - rsi_min + 1e-12)
+
+    df_temp = df_calc.with_columns(raw_stoch_rsi.alias("_raw_stoch_rsi"))
+    df_temp = df_temp.with_columns(
+        (pl.col("_raw_stoch_rsi").rolling_mean(window_size=k_period) * 100.0).alias(f"stoch_rsi_k_{rsi_period}")
+    )
+    df_res = df_temp.with_columns(
+        pl.col(f"stoch_rsi_k_{rsi_period}").rolling_mean(window_size=d_period).alias(f"stoch_rsi_d_{rsi_period}")
+    ).drop([rsi_col, "_raw_stoch_rsi"])
+
+    return df_res
+
+
+def compute_roc(df: pl.DataFrame, period: int = 12, column: str = "close", output_col: Optional[str] = None) -> pl.DataFrame:
+    """Compute Rate of Change (ROC)."""
+    out = output_col or f"roc_{period}"
+    return df.with_columns(
+        ((pl.col(column) - pl.col(column).shift(period)) / (pl.col(column).shift(period) + 1e-12) * 100.0).alias(out)
+    )
+
+
+def compute_momentum(df: pl.DataFrame, period: int = 10, column: str = "close", output_col: Optional[str] = None) -> pl.DataFrame:
+    """Compute raw price momentum."""
+    out = output_col or f"momentum_{period}"
+    return df.with_columns(
+        (pl.col(column) - pl.col(column).shift(period)).alias(out)
+    )
+
+
+def compute_cci(df: pl.DataFrame, period: int = 20, output_col: Optional[str] = None) -> pl.DataFrame:
+    """Compute Commodity Channel Index (CCI)."""
+    out = output_col or f"cci_{period}"
+    tp = (pl.col("high") + pl.col("low") + pl.col("close")) / 3.0
+
+    df_temp = df.with_columns(tp.alias("_tp"))
+    tp_sma = pl.col("_tp").rolling_mean(window_size=period)
+
+    # Mean absolute deviation: Polars rolling mean of |tp - tp_sma|
+    df_temp = df_temp.with_columns(tp_sma.alias("_tp_sma"))
+    df_temp = df_temp.with_columns(
+        (pl.col("_tp") - pl.col("_tp_sma")).abs().rolling_mean(window_size=period).alias("_tp_mad")
+    )
+
+    df_res = df_temp.with_columns(
+        ((pl.col("_tp") - pl.col("_tp_sma")) / (0.015 * pl.col("_tp_mad") + 1e-12)).alias(out)
+    ).drop(["_tp", "_tp_sma", "_tp_mad"])
+
+    return df_res
+
+
+def compute_williams_r(df: pl.DataFrame, period: int = 14, output_col: Optional[str] = None) -> pl.DataFrame:
+    """Compute Williams %R (-100 to 0)."""
+    out = output_col or f"williams_r_{period}"
+    high_max = pl.col("high").rolling_max(window_size=period)
+    low_min = pl.col("low").rolling_min(window_size=period)
+
+    return df.with_columns(
+        (-100.0 * (high_max - pl.col("close")) / (high_max - low_min + 1e-12)).alias(out)
+    )
+
+
+def compute_mfi(df: pl.DataFrame, period: int = 14, output_col: Optional[str] = None) -> pl.DataFrame:
+    """Compute Money Flow Index (MFI)."""
+    out = output_col or f"mfi_{period}"
+    tp = (pl.col("high") + pl.col("low") + pl.col("close")) / 3.0
+    raw_money_flow = tp * pl.col("volume")
+
+    df_temp = df.with_columns([
+        tp.alias("_tp"),
+        raw_money_flow.alias("_rmf"),
+    ])
+
+    prev_tp = pl.col("_tp").shift(1)
+    pos_flow = pl.when(pl.col("_tp") > prev_tp).then(pl.col("_rmf")).otherwise(0.0)
+    neg_flow = pl.when(pl.col("_tp") < prev_tp).then(pl.col("_rmf")).otherwise(0.0)
+
+    df_temp = df_temp.with_columns([
+        pos_flow.alias("_pos_flow"),
+        neg_flow.alias("_neg_flow"),
+    ])
+
+    df_temp = df_temp.with_columns([
+        pl.col("_pos_flow").rolling_sum(window_size=period).alias("_pos_mf"),
+        pl.col("_neg_flow").rolling_sum(window_size=period).alias("_neg_mf"),
+    ])
+
+    df_res = df_temp.with_columns(
+        (100.0 - (100.0 / (1.0 + (pl.col("_pos_mf") / (pl.col("_neg_mf") + 1e-12))))).alias(out)
+    ).drop(["_tp", "_rmf", "_pos_flow", "_neg_flow", "_pos_mf", "_neg_mf"])
 
     return df_res

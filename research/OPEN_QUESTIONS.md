@@ -1,6 +1,6 @@
-# Active Quantitative Research Open Questions
+# Open Research Questions for Milestone 3
 
-1. **Higher-Timeframe Alignment**: Does a 4H structural trend filter statistically improve 15m Fair Value Gap (FVG) entries on ETHUSDT?
-2. **Funding Rate Extremes**: Does extreme positive funding rate ($> 0.03\%$ per 8h) predict mean-reversion pullbacks or trend continuation?
-3. **Liquidity Sweep Invalidation**: What is the optimal ATR buffer for confirming that an equal high/low sweep was rejected rather than a genuine breakout?
-4. **Intrabar Ambiguity Resolution**: Can 1-second trades or tick data causally resolve intrabar stop/target ambiguity in 15m and 1h bars?
+1. **Optimal Swing Window Calibration**: What is the information-delay tradeoff of $L=5, R=5$ vs dynamic ATR-based swing confirmation across multiple market regimes?
+2. **Order Flow & Footprint Integration**: Can real-time WebSocket trade flow and aggregate orderbook imbalances improve liquidity sweep reclaim confirmation?
+3. **Multi-Timeframe Regime Gating**: Does a 4H market regime filter improve 15m SMC strategy win-rate without severely starving trade frequency?
+4. **Machine Learning Meta-Labeling**: Can a causal gradient-boosted decision tree or Random Forest classifier trained on regime/volatility/displacement features predict trade candidate profitability prior to entry execution?

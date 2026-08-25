@@ -125,3 +125,77 @@ def run_backtest(
 
         console.print(f"[bold green]Registered in Research Ledger:[/bold green] {exp_id}")
         console.print(f"HTML Report generated at: [cyan]{html_path}[/cyan]\n")
+
+
+@app.command("walk-forward")
+def walk_forward_cmd(
+    timeframe: str = typer.Option("15m", help="Trading timeframe"),
+    n_folds: int = typer.Option(5, help="Number of walk-forward folds"),
+    anchored: bool = typer.Option(True, help="Use expanding anchored window vs rolling window"),
+):
+    """Execute anchored or rolling walk-forward analysis."""
+    from quant_platform.research.walk_forward import WalkForwardEngine
+    from quant_platform.strategies.baselines.ema_trend import EmaTrendStrategy
+
+    storage = CanonicalStorage()
+    df_1m = storage.read_range(symbol="ETHUSDT")
+    if df_1m.is_empty():
+        console.print("[red]No canonical data available. Run `quant data fetch` first.[/red]")
+        raise typer.Exit(1)
+
+    df_tf = CausalResampler.resample(df_1m, target_timeframe=timeframe)
+    strategy = EmaTrendStrategy()
+
+    wf_engine = WalkForwardEngine()
+    report = wf_engine.run_walk_forward(df_tf, strategy, n_folds=n_folds, is_anchored=anchored)
+
+    table = Table(title=f"Walk-Forward Analysis ({report.mode} - {report.total_folds} Folds)", header_style="bold cyan")
+    table.add_column("Fold", justify="center")
+    table.add_column("Train Bars", justify="right")
+    table.add_column("Test Bars", justify="right")
+    table.add_column("OOS Net Ret %", justify="right")
+    table.add_column("Max DD %", justify="right")
+    table.add_column("Trades", justify="right")
+
+    for f in report.folds:
+        m = f.test_metrics
+        table.add_row(
+            str(f.fold_index),
+            str(f.train_bars),
+            str(f.test_bars),
+            f"{m.total_net_return:+.2f}%",
+            f"{m.max_drawdown_pct:.2f}%",
+            str(m.trade_count),
+        )
+
+    console.print(table)
+    console.print(f"\n[bold]Profitable Folds:[/bold] {report.profitable_folds}/{report.total_folds} ({report.profitable_fold_ratio:.1f}%)")
+    console.print(f"[bold]Aggregate OOS Return:[/bold] {report.aggregate_oos_return:+.2f}%\n")
+
+
+@app.command("ablation")
+def ablation_cmd(
+    timeframe: str = typer.Option("15m", help="Trading timeframe"),
+):
+    """Execute ablation study comparing full strategy against component-removed variants."""
+    from quant_platform.research.ablation import AblationEngine
+    from quant_platform.strategies.advanced.liquidity_sweep_fvg import LiquiditySweepFVGStrategy
+    from quant_platform.strategies.advanced.liquidity_sweep_reversal import LiquiditySweepReversalStrategy
+
+    storage = CanonicalStorage()
+    df_1m = storage.read_range(symbol="ETHUSDT")
+    if df_1m.is_empty():
+        console.print("[red]No canonical data available. Run `quant data fetch` first.[/red]")
+        raise typer.Exit(1)
+
+    df_tf = CausalResampler.resample(df_1m, target_timeframe=timeframe)
+
+    base = LiquiditySweepFVGStrategy()
+    variants = {
+        "minus_fvg_retest": LiquiditySweepReversalStrategy(),
+    }
+
+    abl_engine = AblationEngine()
+    result = abl_engine.run_ablation_study(df_tf, base_strategy=base, ablation_variants=variants)
+
+    console.print(f"\n[bold cyan]{result.summary}[/bold cyan]\n")

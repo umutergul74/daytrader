@@ -54,6 +54,10 @@ class PlatformSettings(BaseSettings):
         return self.LOCAL_DATA_DIR / "manifests"
 
     @property
+    def research_dir(self) -> Path:
+        return self.LOCAL_RESEARCH_DIR
+
+    @property
     def research_ledger_dir(self) -> Path:
         return self.LOCAL_RESEARCH_DIR / "ledger"
 
