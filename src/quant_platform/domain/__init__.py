@@ -19,6 +19,8 @@ from quant_platform.domain.trade import (
     OrderType,
     OrderSide,
     PositionSide,
+    TradeDirection,
+    TradeStatus,
     ExitReason,
     TradeRecord,
 )

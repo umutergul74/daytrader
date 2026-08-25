@@ -20,6 +20,11 @@ class OrderSide(str, Enum):
 class PositionSide(str, Enum):
     LONG = "LONG"
     SHORT = "SHORT"
+    FLAT = "FLAT"
+
+
+TradeDirection = PositionSide
+TradeStatus = Enum("TradeStatus", {"OPEN": "OPEN", "CLOSED": "CLOSED", "PENDING": "PENDING"})
 
 
 class ExitReason(str, Enum):

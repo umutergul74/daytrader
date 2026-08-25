@@ -1,6 +1,6 @@
 # Project State: ETHUSDT Quantitative Research Platform
 
-## Current Milestone: Milestone 2 Completed
+## Current Milestone: Milestone 3 Completed (Live Shadow / Paper Platform & Parity Engine)
 
 ### Architecture Overview
 1. **Data Layer**:
@@ -32,14 +32,22 @@
    - `WalkForwardEngine`: Anchored and rolling out-of-sample multi-fold evaluator.
    - `RobustnessEngine`: Fee (+25%, +50%), slippage (+50%, +100%), concentration, and Monte Carlo bootstrap stress testing.
    - `OptunaOptimizer`: Persistent SQLite/Drive study management with guarded multi-objective evaluation.
-5. **Research Memory & Reporting**:
-   - `ResearchLedger`: Persistent JSON ledger with structured similarity discovery and experiment lineage.
-   - `ReportGenerator`: Dark-themed standalone HTML and JSON reports.
-   - `MLflowAdapter`: MLflow logging integration.
+5. **Live Shadow, Replay & Parity Systems (Milestone 3)**:
+   - `LiveStateEngine`: Rolling multi-timeframe candle buffer with causal $+1$ms close-time recalculation.
+   - `ParityEngine`: Path A (batch) vs Path B (streaming) mathematical and event parity validator (100% parity verified).
+   - `MarketReplayEngine`: Accelerated historical event replayer (e.g. 1 day in 30 seconds).
+   - `BinanceFuturesWebSocketClient`: Live 1m kline and mark price stream listener with auto-reconnect.
+   - `PaperBroker`: Event-driven paper portfolio simulator (Entry, SL, TP1, TP2, fees, slippage, mark-to-market).
+   - `ChampionChallengerCoordinator`: Concurrent multi-strategy tournament coordinator with isolated portfolios.
+   - `DecisionLogger`: Structured daily `.jsonl` audit records with explicit `NO_TRADE` reasoning.
+   - `DriftMonitor`: Real-time signal frequency and feature drift detector.
+   - `TelegramNotifier`: Institutional-grade live shadow signal notification formatter and dispatcher.
+   - `notebooks/03_LIVE_SHADOW.ipynb`: Interactive live paper trading and replay dashboard.
+   - CLI commands: `quant live parity`, `quant live replay`, `quant live start`.
 
 ---
 
 ### Verification Summary
-- **Total Automated Tests**: 27 / 27 passing (100% success rate).
-- **Milestone 2 Empirical Runs**: Families A through J executed and recorded.
-- **Git Commit**: Milestone 2 fully implemented and verified.
+- **Total Automated Tests**: 34 / 34 passing (100% success rate).
+- **Parity Verification**: 100% feature match between batch backtest and live streaming.
+- **Git Commit**: Milestone 3 fully implemented and verified.

@@ -8,6 +8,7 @@ from quant_platform.cli.commands.backtest import app as backtest_app
 from quant_platform.cli.commands.research import app as research_app
 from quant_platform.cli.commands.features import features_app
 from quant_platform.cli.commands.strategies import strategies_app
+from quant_platform.cli.commands.live import live_app
 
 cli = typer.Typer(
     name="quant",
@@ -23,6 +24,7 @@ cli.add_typer(backtest_app, name="backtest")
 cli.add_typer(research_app, name="research")
 cli.add_typer(features_app, name="features")
 cli.add_typer(strategies_app, name="strategies")
+cli.add_typer(live_app, name="live")
 
 
 @cli.command("doctor")

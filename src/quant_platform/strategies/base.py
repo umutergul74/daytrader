@@ -28,3 +28,15 @@ class BaseStrategy(ABC):
     def generate_signals(self, df: pl.DataFrame) -> List[SignalCandidate]:
         """Generate structured SignalCandidates from causal DataFrame."""
         pass
+
+    def generate_latest_signal(self, df: pl.DataFrame) -> Optional[SignalCandidate]:
+        """Evaluate strategy and return the signal candidate for the latest candle if any."""
+        signals = self.generate_signals(df)
+        if not signals:
+            return None
+        if len(df) == 0:
+            return None
+        latest_bar_ts = int(df["open_time"][-1])
+        if signals[-1].timestamp == latest_bar_ts:
+            return signals[-1]
+        return None
