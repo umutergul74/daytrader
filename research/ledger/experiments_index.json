@@ -1,0 +1,14 @@
+[
+  {
+    "experiment_id": "EXP-20260825-090001-26f92b",
+    "strategy_id": "baseline:ema_trend:v1",
+    "hypothesis": "Asset displays medium-term price momentum when fast EMA crosses above/below slow EMA with ATR-normalized risk.",
+    "status": "completed",
+    "date_range": "2024-01-01 - 2024-01-04",
+    "net_return": 1.96,
+    "sharpe": 0.0,
+    "win_rate": 100.0,
+    "trade_count": 1,
+    "created_at": "2026-08-25T09:00:01.580345+00:00"
+  }
+]

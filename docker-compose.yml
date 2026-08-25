@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  quant-research:
+    build: .
+    container_name: eth_quant_platform
+    environment:
+      - QUANT_ENVIRONMENT=vps
+      - QUANT_EXECUTION_POLICY=NO_REAL_MONEY
+    volumes:
+      - ./data:/app/data
+      - ./research:/app/research
+      - ./reports:/app/reports
+      - ./mlruns:/app/mlruns
+    command: ["quant", "doctor"]

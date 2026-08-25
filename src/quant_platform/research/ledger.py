@@ -1,0 +1,138 @@
+"""Research Ledger for immutable experiment tracking and permanent knowledge retention."""
+
+from datetime import datetime, timezone
+import hashlib
+import json
+from pathlib import Path
+from typing import List, Optional, Dict, Any
+
+from quant_platform.config.settings import settings
+from quant_platform.domain.experiment import (
+    ExperimentRecord,
+    ExperimentStatus,
+    QuantMetrics,
+)
+from quant_platform.observability.logger import logger
+
+
+class ResearchLedger:
+    """Persistent ledger storing all completed, rejected, and candidate research experiments."""
+
+    def __init__(self, ledger_dir: Optional[Path] = None):
+        self.ledger_dir = ledger_dir or settings.research_ledger_dir
+        self.records_dir = self.ledger_dir / "records"
+        self.ledger_dir.mkdir(parents=True, exist_ok=True)
+        self.records_dir.mkdir(parents=True, exist_ok=True)
+        self.index_file = self.ledger_dir / "experiments_index.json"
+
+    def _compute_parameter_hash(self, params: Dict[str, Any]) -> str:
+        """Compute deterministic MD5 hash of parameters."""
+        serialized = json.dumps(params, sort_keys=True)
+        return hashlib.md5(serialized.encode("utf-8")).hexdigest()[:10]
+
+    def _compute_experiment_identity(
+        self,
+        strategy_id: str,
+        strategy_version: str,
+        param_hash: str,
+        dataset_fingerprint: str,
+        start_date: str,
+        end_date: str,
+        cost_model: Dict[str, Any],
+        seed: int,
+    ) -> str:
+        """Compute exact identity fingerprint to prevent duplicate re-runs."""
+        identity_payload = {
+            "strategy_id": strategy_id,
+            "strategy_version": strategy_version,
+            "param_hash": param_hash,
+            "dataset_fingerprint": dataset_fingerprint,
+            "start_date": start_date,
+            "end_date": end_date,
+            "cost_model": cost_model,
+            "seed": seed,
+        }
+        raw = json.dumps(identity_payload, sort_keys=True)
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    def generate_experiment_id(self) -> str:
+        """Generate unique human-readable and sortable experiment ID."""
+        now_str = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        rand_suffix = hashlib.sha256(str(datetime.now().timestamp()).encode()).hexdigest()[:6]
+        return f"EXP-{now_str}-{rand_suffix}"
+
+    def register_experiment(self, record: ExperimentRecord) -> Path:
+        """Persist experiment record into ledger and update global index."""
+        record_file = self.records_dir / f"{record.experiment_id}.json"
+        record_file.write_text(record.model_dump_json(indent=2), encoding="utf-8")
+
+        # Update index
+        index = self.list_experiments()
+        index_dict = {e["experiment_id"]: e for e in index}
+        index_dict[record.experiment_id] = {
+            "experiment_id": record.experiment_id,
+            "strategy_id": record.strategy_id,
+            "hypothesis": record.hypothesis,
+            "status": record.status.value,
+            "date_range": f"{record.date_range_start} - {record.date_range_end}",
+            "net_return": record.metrics.total_net_return if record.metrics else 0.0,
+            "sharpe": record.metrics.sharpe_ratio if record.metrics else 0.0,
+            "win_rate": record.metrics.win_rate if record.metrics else 0.0,
+            "trade_count": record.metrics.trade_count if record.metrics else 0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+        self.index_file.write_text(
+            json.dumps(list(index_dict.values()), indent=2),
+            encoding="utf-8",
+        )
+        logger.info(f"Registered experiment in ledger: {record.experiment_id} (Status: {record.status.value})")
+        return record_file
+
+    def list_experiments(self) -> List[Dict[str, Any]]:
+        """List all indexed experiments."""
+        if not self.index_file.exists():
+            return []
+        try:
+            return json.loads(self.index_file.read_text(encoding="utf-8"))
+        except Exception:
+            return []
+
+    def get_experiment(self, experiment_id: str) -> Optional[ExperimentRecord]:
+        """Fetch full experiment record by ID."""
+        record_file = self.records_dir / f"{experiment_id}.json"
+        if not record_file.exists():
+            return None
+        return ExperimentRecord.model_validate_json(record_file.read_text(encoding="utf-8"))
+
+    def find_duplicate(
+        self,
+        strategy_id: str,
+        strategy_version: str,
+        parameters: Dict[str, Any],
+        dataset_fingerprint: str,
+        start_date: str,
+        end_date: str,
+        cost_model: Dict[str, Any],
+        seed: int,
+    ) -> Optional[ExperimentRecord]:
+        """Check if an identical experiment configuration has already been executed."""
+        param_hash = self._compute_parameter_hash(parameters)
+        target_id = self._compute_experiment_identity(
+            strategy_id, strategy_version, param_hash, dataset_fingerprint,
+            start_date, end_date, cost_model, seed
+        )
+
+        for summary in self.list_experiments():
+            exp = self.get_experiment(summary["experiment_id"])
+            if exp is None:
+                continue
+            curr_id = self._compute_experiment_identity(
+                exp.strategy_id, exp.strategy_version, exp.parameter_hash,
+                exp.dataset_fingerprint, exp.date_range_start, exp.date_range_end,
+                exp.cost_model, exp.random_seed
+            )
+            if curr_id == target_id:
+                return exp
+
+        return None
