@@ -248,8 +248,12 @@ class BacktestEngine:
             # ----------------------------------------------------
             # 3. Check for New Signal at Close of this bar (t)
             # ----------------------------------------------------
-            if not in_position and curr_time in signals_by_ts:
-                pending_signal = signals_by_ts[curr_time]
+            close_time = int(bar.get("close_time", 0)) if "close_time" in bar else None
+            if not in_position:
+                if curr_time in signals_by_ts:
+                    pending_signal = signals_by_ts[curr_time]
+                elif close_time is not None and close_time in signals_by_ts:
+                    pending_signal = signals_by_ts[close_time]
 
         # Calculate final metrics and equity curve
         metrics = MetricCalculator.compute_metrics(
