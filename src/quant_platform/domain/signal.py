@@ -47,7 +47,17 @@ class SignalCandidate(BaseModel):
     calculated_rr: float = 0.0
     expiry_timestamp: Optional[int] = None
     evidence: List[str] = Field(default_factory=list)
-    contraindications: List[str] = Field(default_factory=list)
-    regime_context: Dict[str, Any] = Field(default_factory=dict)
     feature_snapshot: Dict[str, Any] = Field(default_factory=dict)
     diagnostics: Dict[str, Any] = Field(default_factory=dict)
+
+    @property
+    def stop_loss(self) -> Optional[float]:
+        return self.stop_candidate.price if self.stop_candidate else None
+
+    @property
+    def take_profit_1(self) -> Optional[float]:
+        return self.target_candidates[0].price if self.target_candidates else None
+
+    @property
+    def risk_reward_ratio(self) -> float:
+        return self.calculated_rr

@@ -5,7 +5,7 @@ Strictly aggregates 1-minute canonical klines into higher timeframes
 and preserving exact causality (an incomplete candle is never marked available).
 """
 
-from typing import Union
+from typing import Union, Optional
 import polars as pl
 from quant_platform.domain.timeframe import Timeframe
 
@@ -16,10 +16,12 @@ class CausalResampler:
     @staticmethod
     def resample(
         df_1m: pl.DataFrame,
-        target_timeframe: Union[str, Timeframe],
+        target_timeframe: Optional[Union[str, Timeframe]] = None,
+        target_tf: Optional[Union[str, Timeframe]] = None,
     ) -> pl.DataFrame:
         """Resample 1-minute OHLCV DataFrame into target timeframe."""
-        tf = Timeframe(target_timeframe) if isinstance(target_timeframe, str) else target_timeframe
+        chosen_tf = target_timeframe or target_tf or "15m"
+        tf = Timeframe(chosen_tf) if isinstance(chosen_tf, str) else chosen_tf
         if tf == Timeframe.M1:
             return df_1m.sort("open_time")
 
@@ -64,5 +66,6 @@ class CausalResampler:
         aggregated = aggregated.with_columns([
             (pl.col("close_time") + 1).alias("available_at_ms")
         ])
-
         return aggregated
+
+    resample_1m_to_tf = resample

@@ -9,6 +9,9 @@ from quant_platform.cli.commands.research import app as research_app
 from quant_platform.cli.commands.features import features_app
 from quant_platform.cli.commands.strategies import strategies_app
 from quant_platform.cli.commands.live import live_app
+from quant_platform.cli.commands.shadow import app as shadow_app
+from quant_platform.cli.commands.microstructure import app as microstructure_app
+from quant_platform.cli.commands.ml import app as ml_app
 
 cli = typer.Typer(
     name="quant",
@@ -25,6 +28,9 @@ cli.add_typer(research_app, name="research")
 cli.add_typer(features_app, name="features")
 cli.add_typer(strategies_app, name="strategies")
 cli.add_typer(live_app, name="live")
+cli.add_typer(shadow_app, name="shadow")
+cli.add_typer(microstructure_app, name="microstructure")
+cli.add_typer(ml_app, name="ml")
 
 
 @cli.command("doctor")

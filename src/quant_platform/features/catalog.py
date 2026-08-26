@@ -130,3 +130,64 @@ FeatureCatalog.register(FeatureMetadata(
     source_implementation="quant_platform.features.time_session.engine.TimeSessionEngine",
     lifecycle_status=FeatureLifecycle.CAUSALITY_TESTED,
 ))
+
+# Phase 4 Microstructure Primitives
+FeatureCatalog.register(FeatureMetadata(
+    feature_id="orderflow:delta_1m",
+    version="v1",
+    category="orderflow",
+    mathematical_definition="Delta = TakerBuyVol - TakerSellVol",
+    source_implementation="quant_platform.features.microstructure.cvd.CvdEngine",
+    lifecycle_status=FeatureLifecycle.CAUSALITY_TESTED,
+    evidence_summary="1m window signed volume delta and normalized relative delta.",
+))
+
+FeatureCatalog.register(FeatureMetadata(
+    feature_id="orderflow:cvd_session",
+    version="v1",
+    category="orderflow",
+    mathematical_definition="Rolling/Session cumulative sum of signed volume delta",
+    source_implementation="quant_platform.features.microstructure.cvd.CvdEngine",
+    lifecycle_status=FeatureLifecycle.CAUSALITY_TESTED,
+    evidence_summary="Session CVD and Bearish/Bullish absorption divergence detection.",
+))
+
+FeatureCatalog.register(FeatureMetadata(
+    feature_id="orderflow:trade_imbalance",
+    version="v1",
+    category="orderflow",
+    mathematical_definition="(BuyVol - SellVol) / TotalVol",
+    source_implementation="quant_platform.features.microstructure.trade_flow.TradeFlowEngine",
+    lifecycle_status=FeatureLifecycle.CAUSALITY_TESTED,
+    evidence_summary="Aggressive order flow imbalance and signed volume momentum.",
+))
+
+FeatureCatalog.register(FeatureMetadata(
+    feature_id="derivatives:oi_change_15m",
+    version="v1",
+    category="derivatives",
+    mathematical_definition="OI[i] - OI[i-1] and percentage change over 15m intervals",
+    source_implementation="quant_platform.features.microstructure.open_interest_features.OpenInterestFeatureEngine",
+    lifecycle_status=FeatureLifecycle.CAUSALITY_TESTED,
+    evidence_summary="Open interest shift and rolling Z-score.",
+))
+
+FeatureCatalog.register(FeatureMetadata(
+    feature_id="derivatives:oi_regime_state",
+    version="v1",
+    category="derivatives",
+    mathematical_definition="4-State Joint Price/OI classification (Long Buildup, Short Covering, Short Buildup, Long Liquidation)",
+    source_implementation="quant_platform.features.microstructure.open_interest_features.OpenInterestFeatureEngine",
+    lifecycle_status=FeatureLifecycle.CAUSALITY_TESTED,
+    evidence_summary="Contextual derivatives positioning matrix.",
+))
+
+FeatureCatalog.register(FeatureMetadata(
+    feature_id="liquidation:burst_15m",
+    version="v1",
+    category="liquidation",
+    mathematical_definition="Rolling 15m liquidation volume imbalance and burst flag (Z > 3.0)",
+    source_implementation="quant_platform.features.microstructure.liquidation_features.LiquidationFeatureEngine",
+    lifecycle_status=FeatureLifecycle.CAUSALITY_TESTED,
+    evidence_summary="Forced liquidation clusters and sweep confluence signals.",
+))

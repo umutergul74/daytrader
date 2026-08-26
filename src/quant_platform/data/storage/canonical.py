@@ -96,9 +96,26 @@ class CanonicalStorage:
             start_ms = int(start_time.timestamp() * 1000)
             lazy_df = lazy_df.filter(pl.col("open_time") >= start_ms)
 
-        if end_time is not None:
-            end_ms = int(end_time.timestamp() * 1000)
-            lazy_df = lazy_df.filter(pl.col("open_time") <= end_ms)
-
         df = lazy_df.sort("open_time").collect()
         return df.unique(subset=["open_time"]).sort("open_time")
+
+    def read_symbol(
+        self,
+        symbol: str = "ETHUSDT",
+        start_year: Optional[int] = None,
+        start_month: Optional[int] = None,
+        market: str = "binance_usdm",
+        dataset: str = "contract_klines",
+        timeframe: str = "1m",
+    ) -> pl.DataFrame:
+        """Convenience method to read canonical data for a symbol."""
+        start_time = None
+        if start_year is not None:
+            start_time = datetime(start_year, start_month or 1, 1, tzinfo=timezone.utc)
+        return self.read_range(
+            start_time=start_time,
+            market=market,
+            symbol=symbol,
+            dataset=dataset,
+            timeframe=timeframe,
+        )
