@@ -11,6 +11,8 @@ from quant_platform.strategies.advanced.liquidity_sweep_reversal import Liquidit
 from quant_platform.strategies.advanced.liquidity_sweep_fvg import LiquiditySweepFVGStrategy
 from quant_platform.strategies.advanced.fvg_continuation import FvgTrendContinuationStrategy
 from quant_platform.strategies.advanced.regime_mean_reversion import RegimeAwareMeanReversionStrategy
+from quant_platform.strategies.advanced.session_institutional_smc import SessionInstitutionalSMCStrategy
+from quant_platform.strategies.advanced.institutional_macro_champion import InstitutionalMacroStructureChampion
 
 
 class StrategyCatalog:
@@ -27,6 +29,8 @@ class StrategyCatalog:
         "liquidity_sweep_fvg": LiquiditySweepFVGStrategy,
         "fvg_continuation": FvgTrendContinuationStrategy,
         "regime_mean_reversion": RegimeAwareMeanReversionStrategy,
+        "session_institutional_smc": SessionInstitutionalSMCStrategy,
+        "institutional_macro_champion": InstitutionalMacroStructureChampion,
     }
 
     @classmethod
@@ -65,3 +69,5 @@ StrategyCatalog.register(LiquiditySweepReversalStrategy().metadata)
 StrategyCatalog.register(LiquiditySweepFVGStrategy().metadata)
 StrategyCatalog.register(FvgTrendContinuationStrategy().metadata)
 StrategyCatalog.register(RegimeAwareMeanReversionStrategy().metadata)
+StrategyCatalog.register(SessionInstitutionalSMCStrategy().metadata)
+StrategyCatalog.register(InstitutionalMacroStructureChampion().metadata)

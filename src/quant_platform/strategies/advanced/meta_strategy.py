@@ -61,13 +61,13 @@ class MetaLabeledStrategy(BaseStrategy):
 
             idx = time_to_idx[cand_t]
             row_feats = feat_matrix[idx].tolist() if feat_cols else [0.0]
-            row_feats.append(float(cand.risk_reward_ratio or 2.0))
+            row_feats.append(float(cand.calculated_rr or 2.0))
 
             prob = self.meta_trainer.predict_probability(np.array(row_feats, dtype=np.float32))
 
             if prob >= self.probability_threshold:
-                cand.metadata["ml_probability"] = prob
-                cand.metadata["ml_filter_accepted"] = True
+                cand.diagnostics["ml_probability"] = prob
+                cand.diagnostics["ml_filter_accepted"] = True
                 accepted.append(cand)
             else:
                 logger.debug(f"[ML META FILTER] Rejected candidate at {cand_t}: P={prob:.2%} < {self.probability_threshold:.2%}")

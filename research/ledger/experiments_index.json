@@ -418,5 +418,29 @@
     "win_rate": 0.0,
     "trade_count": 0,
     "created_at": "2026-08-25T16:22:00.713168+00:00"
+  },
+  {
+    "experiment_id": "EXP-20260901-111217-f135a0",
+    "strategy_id": "structure:macro_champion",
+    "hypothesis": "Institutional crypto momentum flows along 4H macro structure. 1H EMA pullbacks with structural invalidations capture high-R expansion moves.",
+    "status": "validated",
+    "date_range": "2024-01-01 - 2024-06-30",
+    "net_return": 23.911,
+    "sharpe": 4.134,
+    "win_rate": 46.0,
+    "trade_count": 50,
+    "created_at": "2026-09-01T11:12:17.999128+00:00"
+  },
+  {
+    "experiment_id": "EXP-20260901-111239-8386d7",
+    "strategy_id": "structure:macro_champion",
+    "hypothesis": "Institutional crypto momentum flows along 4H macro structure. 1H EMA pullbacks with structural invalidations capture high-R expansion moves.",
+    "status": "validated",
+    "date_range": "2024-01-01 - 2024-06-30",
+    "net_return": 23.911,
+    "sharpe": 4.134,
+    "win_rate": 46.0,
+    "trade_count": 50,
+    "created_at": "2026-09-01T11:12:39.672682+00:00"
   }
 ]
