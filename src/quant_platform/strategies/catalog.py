@@ -13,6 +13,7 @@ from quant_platform.strategies.advanced.fvg_continuation import FvgTrendContinua
 from quant_platform.strategies.advanced.regime_mean_reversion import RegimeAwareMeanReversionStrategy
 from quant_platform.strategies.advanced.session_institutional_smc import SessionInstitutionalSMCStrategy
 from quant_platform.strategies.advanced.institutional_macro_champion import InstitutionalMacroStructureChampion
+from quant_platform.strategies.advanced.institutional_smart_money_confluence import InstitutionalSmartMoneyConfluenceStrategy
 
 
 class StrategyCatalog:
@@ -31,6 +32,7 @@ class StrategyCatalog:
         "regime_mean_reversion": RegimeAwareMeanReversionStrategy,
         "session_institutional_smc": SessionInstitutionalSMCStrategy,
         "institutional_macro_champion": InstitutionalMacroStructureChampion,
+        "institutional_smc_confluence": InstitutionalSmartMoneyConfluenceStrategy,
     }
 
     @classmethod
@@ -71,3 +73,4 @@ StrategyCatalog.register(FvgTrendContinuationStrategy().metadata)
 StrategyCatalog.register(RegimeAwareMeanReversionStrategy().metadata)
 StrategyCatalog.register(SessionInstitutionalSMCStrategy().metadata)
 StrategyCatalog.register(InstitutionalMacroStructureChampion().metadata)
+StrategyCatalog.register(InstitutionalSmartMoneyConfluenceStrategy().metadata)

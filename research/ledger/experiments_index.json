@@ -442,5 +442,53 @@
     "win_rate": 46.0,
     "trade_count": 50,
     "created_at": "2026-09-01T11:12:39.672682+00:00"
+  },
+  {
+    "experiment_id": "EXP-20260906-211639-f98b7a",
+    "strategy_id": "structure:macro_champion",
+    "hypothesis": "Institutional crypto momentum flows along 4H macro structure. 1H EMA pullbacks with structural invalidations capture high-R expansion moves.",
+    "status": "validated",
+    "date_range": "2024-01-01 - 2024-06-30",
+    "net_return": 23.911,
+    "sharpe": 4.134,
+    "win_rate": 46.0,
+    "trade_count": 50,
+    "created_at": "2026-09-06T21:16:39.390662+00:00"
+  },
+  {
+    "experiment_id": "EXP-20260906-214018-bec6c1",
+    "strategy_id": "smc:institutional_confluence:v1",
+    "hypothesis": "Institutional market makers accumulate and distribute during London/NY sessions by raiding retail liquidity pools, displacing price to create Fair Value Gaps, and entering on causal mitigation retests aligned with 4H macro market structure.",
+    "status": "completed",
+    "date_range": "2024-01-01 - 2024-07-01",
+    "net_return": 21.492,
+    "sharpe": 2.657,
+    "win_rate": 42.42,
+    "trade_count": 66,
+    "created_at": "2026-09-06T21:40:18.365038+00:00"
+  },
+  {
+    "experiment_id": "EXP-20260906-214036-cb4f2a",
+    "strategy_id": "baseline:ema_trend:v1",
+    "hypothesis": "Asset displays medium-term price momentum when fast EMA crosses above/below slow EMA with ATR-normalized risk.",
+    "status": "rejected",
+    "date_range": "2024-01-01 - 2024-07-01",
+    "net_return": -6.231,
+    "sharpe": -1.373,
+    "win_rate": 32.08,
+    "trade_count": 53,
+    "created_at": "2026-09-06T21:40:36.877278+00:00"
+  },
+  {
+    "experiment_id": "EXP-20260906-214858-84651b",
+    "strategy_id": "smc:institutional_champion",
+    "hypothesis": "Combining 4H macro market structure with 1H Fair Value Gap (FVG) mitigation and EMA value pullbacks provides institutional confluence, filtering false signals.",
+    "status": "validated",
+    "date_range": "2024-01-01 - 2024-06-30",
+    "net_return": 54.479,
+    "sharpe": 4.295,
+    "win_rate": 46.94,
+    "trade_count": 49,
+    "created_at": "2026-09-06T21:48:58.205711+00:00"
   }
 ]

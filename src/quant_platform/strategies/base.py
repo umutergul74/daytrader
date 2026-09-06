@@ -11,6 +11,7 @@ from quant_platform.domain.signal import SignalCandidate
 class StrategyMetadata(BaseModel):
     strategy_id: str
     version: str = "v1"
+    family: str = "general"
     hypothesis: str
     required_features: List[str] = Field(default_factory=list)
     parameters: Dict[str, Any] = Field(default_factory=dict)
